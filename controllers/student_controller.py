@@ -58,14 +58,21 @@ def delete_student(student_id):
 
 @student_bp.route("/<int:student_id", methods=["PUT", "PATCH"])
 def update_student(student_id):
-    stmt = db.select(Student).filter_by(id=student_id)
-    student = db.session.scalar(stmt)
-    body_data = request.get_json()
-    if student:
-        student_name = body_data.get("name") or student.name
-        student_email = body_data.get("email") or student.email
-        student_address = body_data.get("address") or student.address
-        db.session.commit()
-        return student_schema.dump(student)
-    else:
-        return {"message": f"Student with id {student_id} does not exist"}, 404
+    try:
+        stmt = db.select(Student).filter_by(id=student_id)
+        student = db.session.scalar(stmt)
+        body_data = request.get_json()
+        if student:
+            student.name = body_data.get("name") or student.name
+            student.email = body_data.get("email") or student.email
+            student.address = body_data.get("address") or student.address
+            db.session.commit()
+            return student_schema.dump(student)
+        else:
+            return {"message": f"Student with id {student_id} does not exist"}, 404
+    except IntegrityError as err:
+        if err.orig.pgcode == errorcodes.NOT_NULL_VIOLATION:
+            return {"message": f"The field {err.orig.diag.column_name} is required"}, 409
+            
+        if err.orig.pgcode == errorcodes.UNIQUE_VIOLATION:
+            return {"message": "Email address already in use"}, 409
