@@ -1,3 +1,5 @@
+from marshmallow import fields
+
 from init import db, ma
 
 class Course(db.Model):
@@ -8,9 +10,13 @@ class Course(db.Model):
     duration = db.Column(db.Float)
     teacher_id = db.Columnn(db.Integer, db.ForeignKey("teachers.id"))
 
+    teacher = db.relationship("Teacher", back_populates="courses")
+
 class CourseSchema(ma.Schema):
+    ordered=True
+    teacher = fields.Nested("TeacherSchema", only=["name", "department"])
     class Meta:
-        fields = ("id", "name", "duration", "teacher_id")
+        fields = ("id", "name", "duration", "teacher_id", "teacher")
 
 course_schema = CourseSchema()
 courses_schema = CourseSchema(many=True)
