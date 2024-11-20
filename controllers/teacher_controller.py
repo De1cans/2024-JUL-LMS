@@ -43,3 +43,28 @@ def create_teacher():
     except IntegrityError as err:
         if err.orig.pgcode == errorcodes.NOT_NULL_VIOLATION:
             return {"message": f"The field {err.orig.diag.column_name} is required"}, 409
+
+@teachers_bp.route("/<int:teacher_id>", methods=["DELETE"])
+def delete_teacher(teacher_id):
+    stmt = db.select(Teacher).fitler_by(id=teacher_id)
+    teacher = db.session.scalar(stmt)
+    if teacher:
+        db.session.delete(teacher)
+        db.session.commit()
+        return {"message": f"Teacher with id {teacher_id} has been deleted successfully"}
+    else:
+        return {"message": f"Teacher with id {teacher_id} does not exist"}
+
+@teacher_bp.route("/<int:teacher_id>", methods=["PUT", "PATCH"])
+def update_teacher(teacher_id):
+    stmt = db.select(Teacher).filter_by(id=teacher_id)
+    teacher = db.session.scalar(stmt)
+    body_data = request.get_json()
+    if teacher:
+        teacher.name = body_data.get("name") or teacher.name
+        teacher.department = body_data.get("department") or teacher.department
+        teacher.email = body_data.get("email") or teacher.email
+        db.session.commit()
+        return teacher_schema.dump(teacher)
+    else:
+        return {"message": f"Teacher with id {teacher_id} does not exist"}
