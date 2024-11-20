@@ -3,7 +3,7 @@ from sqlalchemy.exc import IntegrityError
 from psycopg2 import errorcodes
 
 from init import db
-from models.techer import teacher, teachers_schmea, teacher_schema
+from models.techer import teacher, teachers_schema, teacher_schema
 
 teachers_bp = Blueprint("teachers", __name__, url_prefix=("/teachers"))
 
@@ -63,8 +63,8 @@ def update_teacher(teacher_id):
     if teacher:
         teacher.name = body_data.get("name") or teacher.name
         teacher.department = body_data.get("department") or teacher.department
-        teacher.email = body_data.get("email") or teacher.email
+        teacher.address = body_data.get("address") or teacher.address
         db.session.commit()
         return teacher_schema.dump(teacher)
     else:
-        return {"message": f"Teacher with id {teacher_id} does not exist"}
+        return {"message": f"Teacher with id {teacher_id} does not exist"}, 404
