@@ -52,6 +52,7 @@ def seed_tables():
     ]
 
     db.session.add_all(teachers)
+
     db.session.commit()
 
     courses = [
@@ -73,7 +74,7 @@ def seed_tables():
         Course(
             name="Course 4",
             duration=3,
-            teacher_id=teachers[1].id
+            teacher_id=teachers[0].id
         )
     ]
 

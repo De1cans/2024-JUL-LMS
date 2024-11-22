@@ -13,6 +13,21 @@ class Teacher(db.Model):
 
     courses = db.relationship("Course", back_populates="teacher")
 
+# id: 1,
+# name: "Teacher 1",
+# department: "Engineering",
+# address: "Sydney",
+# courses: [
+#   {
+#       id: 1,
+#       name: "Course 1"
+#   },
+#   {
+#       id: 2,
+#       name: "Course 2"
+#   }
+# ]
+
 
 class TeacherSchema(ma.Schema):
     courses = fields.List(fields.Nested("CourseSchema", exclude=["teacher"]))

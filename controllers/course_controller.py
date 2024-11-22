@@ -1,69 +1,96 @@
-from flask import blueprint, request
+from flask import Blueprint, request
 from sqlalchemy.exc import IntegrityError
 from psycopg2 import errorcodes
 
 from init import db
-from models.course import course, courses_schema, course_schema
+from models.course import Course, courses_schema, course_schema
 
 courses_bp = Blueprint("courses", __name__, url_prefix="/courses")
 
+
+# Read all
 @courses_bp.route("/")
 def get_courses():
     stmt = db.select(Course)
     courses_list = db.session.scalars(stmt)
-    data = courses_schema.duimp(courses_list)
-    return data
+    return courses_schema.dump(courses_list)
 
+
+# Read one
 @courses_bp.route("/<int:course_id>")
 def get_course(course_id):
     stmt = db.select(Course).filter_by(id=course_id)
     course = db.session.scalar(stmt)
     if course:
         return course_schema.dump(course)
-    else: 
+    else:
         return {"message": f"Course with id {course_id} does not exist"}, 404
 
+
+# Create
 @courses_bp.route("/", methods=["POST"])
-def create_course(course_id):
+def create_course():
     try:
+        # get the data from the request body
         body_data = request.get_json()
-        new_course = Course(
+        # create a Course instance
+        course = Course(
             name=body_data.get("name"),
             duration=body_data.get("duration"),
             teacher_id=body_data.get("teacher_id")
         )
-        db.session.add(new_course)
+        # add to session and commit
+        db.session.add(course)
         db.session.commit()
-        return course_schema.dump(new_course), 201
+        # return a response
+        return course_schema.dump(course), 201
     except IntegrityError as err:
         if err.orig.pgcode == errorcodes.NOT_NULL_VIOLATION:
-            return {"message": f"The field {err.orig.diag.column_name} is required"}, 409
-        
+            return {"message": "The name cannot be null"}, 409
         if err.orig.pgcode == errorcodes.UNIQUE_VIOLATION:
-            return {"message": f"Course name already in use"}, 409
+            return {"message": "Duplicate name"}, 409
 
+
+# Delete
 @courses_bp.route("/<int:course_id>", methods=["DELETE"])
 def delete_course(course_id):
+    # find the course to delete
     stmt = db.select(Course).filter_by(id=course_id)
     course = db.session.scalar(stmt)
+    # if the course exists
     if course:
+        # delete
         db.session.delete(course)
+        # commit
         db.session.commit()
-        return {"message": f"Course with id {course_id} has been deleted successfullly"}
+        # return
+        return {"message": f"Course '{course.name}' deleted successfully"}
+    # else
     else:
-        return {"message": f"Course with id {course_id} does not exist"}, 404
+        # return error response
+        return {"message": f"Course with id {course_id} doesn't exist"}, 404
 
 
+# Update
 @courses_bp.route("/<int:course_id>", methods=["PUT", "PATCH"])
 def update_course(course_id):
+    # find the course from the db to be updated
     stmt = db.select(Course).filter_by(id=course_id)
     course = db.session.scalar(stmt)
+    # get the data from the request body
     body_data = request.get_json()
+    # if the course exists
     if course:
+        # update the course data using the data from the request body
         course.name = body_data.get("name") or course.name
         course.duration = body_data.get("duration") or course.duration
         course.teacher_id = body_data.get("teacher_id") or course.teacher_id
+        # commit
         db.session.commit()
+        # return a response
         return course_schema.dump(course)
+    # else
     else:
-        return {"message": f"Course with id {course_id} does not exist"}, 404
+        # return an error message
+        return {"message": f"Course with id {course_id} doesn't exist"}, 404
+        
