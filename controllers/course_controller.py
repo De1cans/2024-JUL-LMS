@@ -1,5 +1,5 @@
 from flask import Blueprint, request
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, DataError
 from psycopg2 import errorcodes
 
 from init import db
@@ -74,23 +74,29 @@ def delete_course(course_id):
 # Update
 @courses_bp.route("/<int:course_id>", methods=["PUT", "PATCH"])
 def update_course(course_id):
-    # find the course from the db to be updated
-    stmt = db.select(Course).filter_by(id=course_id)
-    course = db.session.scalar(stmt)
-    # get the data from the request body
-    body_data = request.get_json()
-    # if the course exists
-    if course:
-        # update the course data using the data from the request body
-        course.name = body_data.get("name") or course.name
-        course.duration = body_data.get("duration") or course.duration
-        course.teacher_id = body_data.get("teacher_id") or course.teacher_id
-        # commit
-        db.session.commit()
-        # return a response
-        return course_schema.dump(course)
-    # else
-    else:
-        # return an error message
-        return {"message": f"Course with id {course_id} doesn't exist"}, 404
-        
+    try:
+        # find the course from the db to be updated
+        stmt = db.select(Course).filter_by(id=course_id)
+        course = db.session.scalar(stmt)
+        # get the data from the request body
+        body_data = request.get_json()
+        # if the course exists
+        if course:
+            # update the course data using the data from the request body
+            course.name = body_data.get("name") or course.name
+            course.duration = body_data.get("duration") or course.duration
+            course.teacher_id = body_data.get("teacher_id") or course.teacher_id
+            # commit
+            db.session.commit()
+            # return a response
+            return course_schema.dump(course)
+        # else
+        else:
+            # return an error message
+            return {"message": f"Course with id {course_id} doesn't exist"}, 404
+    except IntegrityError:
+        return {"message": "Name must be unique"}, 409
+    except DataError as err:
+        # for attr in dir(err.orig.diag):
+        #     print("obj.%s = %r" % (attr, getattr(err.orig.diag, attr)))
+        return {"message": err.orig.diag.message_primary}, 409
