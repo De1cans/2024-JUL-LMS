@@ -22,7 +22,6 @@ def drop_tables():
 
 @db_commands.cli.command("seed")
 def seed_tables():
-
     students = [
         Student(
             name="Student 1",

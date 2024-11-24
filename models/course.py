@@ -13,7 +13,7 @@ class Course(db.Model):
 
     teacher = db.relationship("Teacher", back_populates="courses")
 
-    enrolment = db.relationship("Enrolment", back_populates="course", cascase="all, delete")
+    enrolment = db.relationship("Enrolment", back_populates="course", cascade="all, delete")
 
 
 # id: 1,
