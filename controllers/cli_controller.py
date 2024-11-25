@@ -4,6 +4,7 @@ from init import db
 from models.student import Student
 from models.teacher import Teacher
 from models.course import Course
+from models.enrolment import Enrolment
 
 db_commands = Blueprint("db", __name__)
 
@@ -22,6 +23,7 @@ def drop_tables():
 
 @db_commands.cli.command("seed")
 def seed_tables():
+
     students = [
         Student(
             name="Student 1",
