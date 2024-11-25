@@ -14,7 +14,7 @@ class Student(db.Model):
     enrolments = db.relationship("Enrolment", back_populates="student", cascade="all, delete")
 
 class StudentSchema(ma.Schema):
-    enrolments = fields.List(fields.Nested("EnrolmentSchema", exclude=["student"]))
+    enrolments = fields.List(fields.Nested("EnrolmentSchema"), exclude=["student"])
     class Meta:
         fields = ("id", "name", "email", "address", "enrolments")
 
