@@ -1,4 +1,5 @@
 from marshmallow import fields
+from marshmallow.validate import Length, And, Regexp
 
 from init import db, ma
 
@@ -41,6 +42,11 @@ class Course(db.Model):
 
 
 class CourseSchema(ma.Schema):
+    name = fields.String(required=True, validate=And(
+        Length(min=2, error="name must be at least 2 characters long"),
+        Regexp('^[A-Za-z0-9][A-Za-z0-9 ]*$+', error="Only letters, numbers and spaces are allowed")
+    ))
+
     ordered=True
     teacher = fields.Nested("TeacherSchema", only=["name", "department"])
     enrolments = fields.List(fields.Nested("EnrolmentSchema", exclude=["course"]))

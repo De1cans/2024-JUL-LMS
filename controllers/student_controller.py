@@ -40,7 +40,7 @@ def get_student(student_id):
 def create_student():
     try:
         # get information from the request body
-        body_data = request.get_json()
+        body_data = student_schema.load(request.get_json())
         # create student instance
         new_student = Student(
             name=body_data.get("name"),
@@ -90,7 +90,7 @@ def update_student(student_id):
         stmt = db.select(Student).filter_by(id=student_id)
         student = db.session.scalar(stmt)
         # get the data to be updated from the request body
-        body_data = request.get_json()
+        body_data = student_schema.load(request.get_json(), partial=True)
         # if student exists
         if student:
             # update the student data
