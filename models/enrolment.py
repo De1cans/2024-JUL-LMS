@@ -1,4 +1,7 @@
-from marshmallow import fields
+from datetime import date
+
+from marshmallow import fields, validates
+from  marshmallow.exceptions import ValidationError
 
 from init import db, ma
 
@@ -19,6 +22,13 @@ class Enrolment(db.Model):
 
 
 class EnrolmentSchema(ma.Schema):
+# method within a class, starts with "self" parameter
+    @validates('enrolment_date')
+    def validate_enrolment_date(self, value):
+        today = date.today()
+        if date.fromisoformat(value) < today:
+            raise ValidationError("Enrolment date cannot be in past") 
+
     student = fields.Nested("StudentSchema", only=["name", "email"])
     course = fields.Nested("CourseSchema", only=["name", "duration"])
     class Meta:
